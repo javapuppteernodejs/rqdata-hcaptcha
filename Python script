@@ -1,0 +1,42 @@
+### Example Implementation
+
+Here's a Python script example that demonstrates how to handle `rqdata` with Capsolver:
+
+```python
+import requests
+import time
+
+api_key = "YOUR_API_KEY"
+site_key = "6LcR_okUAAAAAPYrPe-HK_0RULO1aZM15ENyM-Mf"
+site_url = "https://example.com"
+
+def solve_hcaptcha():
+    payload = {
+        "clientKey": api_key,
+        "task": {
+            "type": 'HCaptchaTaskProxyLess',
+            "websiteKey": site_key,
+            "websiteURL": site_url,
+            "enterprisePayload": {
+                "rqdata": "your_rqdata_value_here"
+            }
+        }
+    }
+    response = requests.post("https://api.capsolver.com/createTask", json=payload)
+    task_id = response.json().get("taskId")
+    if not task_id:
+        print("Failed to create task:", response.text)
+        return None
+
+    while True:
+        time.sleep(3)
+        task_result = requests.post("https://api.capsolver.com/getTaskResult", json={"clientKey": api_key, "taskId": task_id})
+        if task_result.json().get("status") == "ready":
+            return task_result.json().get('solution', {}).get('gRecaptchaResponse')
+        elif task_result.json().get("status") == "failed":
+            print("Solve failed! Response:", task_result.text)
+            return None
+
+hcaptcha_token = solve_hcaptcha()
+print(hcaptcha_token)
+```
